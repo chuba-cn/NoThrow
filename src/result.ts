@@ -69,8 +69,21 @@ interface ResultMethods<T, E> {
   /**
    * Returns the provided result if this result is {@link Ok},
    * otherwise returns the {@link Err} value of this result.
+   *
+   * This is useful for chaining operations that might fail. The error type of the
+   * returned Result will be a union of the original error type and the new error type.
+   *
+   * @example
+   * ```ts
+   * const r1: Result<number, string> = ok(1);
+   * const r2 = r1.flatMap(x => {
+   *   if (x > 0) return ok(x * 2);
+   *   return err(new Error("invalid"));
+   * });
+   * // r2 is Result<number, string | Error>
+   * ```
    */
-  flatMap<U>(fn: (value: T) => Result<U, E>): Result<U, E>;
+  flatMap<U, F>(fn: (value: T) => Result<U, F>): Result<U, E | F>;
 
   /**
    * Returns `other` if the result is {@link Ok}, otherwise returns the {@link Err} value of self.
@@ -141,7 +154,7 @@ export class Ok<T, E> implements ResultMethods<T, E> {
     return new Ok(this.value);
   }
 
-  flatMap<U>(fn: (value: T) => Result<U, E>): Result<U, E> {
+  flatMap<U, F>(fn: (value: T) => Result<U, F>): Result<U, E | F> {
     return fn(this.value);
   }
 
@@ -212,8 +225,8 @@ export class Err<T, E> implements ResultMethods<T, E> {
     return new Err(fn(this.error));
   }
 
-  flatMap<U>(_fn: (value: T) => Result<U, E>): Result<U, E> {
-    return new Err(this.error);
+  flatMap<U, F>(_fn: (value: T) => Result<U, F>): Result<U, E | F> {
+    return new Err<U, E | F>(this.error);
   }
 
   and<U>(_other: Result<U, E>): Result<U, E> {
