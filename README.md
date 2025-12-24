@@ -1,7 +1,37 @@
-# Result and Option Types
+# nothrow-ts - Result and Option Types for TypeScript
+
+[![npm version](https://badge.fury.io/js/nothrow-ts.svg)](https://badge.fury.io/js/nothrow-ts)
 
 A TypeScript library for type-safe error handling, inspired by Rust's Result and Option types. Features generator-based error propagation using yield\* for automatic unwrapping, similar to Rust's ? operator.
 
+## Installation
+
+```bash
+npm install nothrow-ts
+```
+
+## Why nothrow-ts?
+
+Traditional JavaScript error handling with try/catch has several problems:
+
+- **Invisible errors**: Functions don't declare what errors they might throw
+- **Runtime surprises**: No compile-time guarantees about error handling
+- **Nested try/catch blocks**: Complex error handling leads to deeply nested code
+- **Mixed concerns**: Business logic mixed with error handling
+
+Nothrow-ts solves these by making errors explicit in the type system:
+
+```typescript
+// Before: Hidden errors, runtime surprises
+function parseUser(json: string): User {
+  return JSON.parse(json); // Can throw, but type doesn't show it
+}
+
+// After: Explicit errors, compile-time safety
+function parseUser(json: string): Result<User, string> {
+  return fromThrowable(() => JSON.parse(json));
+}
+```
 
 ## Features
 
@@ -21,7 +51,7 @@ A TypeScript library for type-safe error handling, inspired by Rust's Result and
 Use Result.gen() with yield\* for automatic error propagation:
 
 ```typescript
-import { ok, err, gen, Result } from "nothrow";
+import { ok, err, gen, Result } from "nothrow-ts";
 
 function divide(a: number, b: number): Result<number, string> {
   if (b === 0) return err("Division by zero");
@@ -43,7 +73,7 @@ calculate(10, 0, 5).isErr(); // true
 ### Traditional Chaining
 
 ```typescript
-import { ok, err } from "nothrow";
+import { ok, err } from "nothrow-ts";
 
 const result = divide(10, 2)
   .flatMap((x) => divide(x, 5))
@@ -61,7 +91,7 @@ Result represents either success (Ok) or failure (Err).
 #### Construction
 
 ```typescript
-import { ok, err, fromThrowable, fromPromise } from "nothrow";
+import { ok, err, fromThrowable, fromPromise } from "nothrow-ts";
 
 // Create Ok or Err
 const success = ok(42);
@@ -128,7 +158,7 @@ const output = result.match({
 Wrap a generator function to enable automatic error propagation:
 
 ```typescript
-import { gen, ok, err } from "nothrow";
+import { gen, ok, err } from "nothrow-ts";
 
 const myFunction = gen(function* (x: number) {
   const a = yield* someOperation(x);
@@ -150,7 +180,7 @@ Benefits:
 Handle async operations with automatic retry:
 
 ```typescript
-import { tryPromise } from "nothrow";
+import { tryPromise } from "nothrow-ts";
 
 const result = await tryPromise({
   try: async () => {
@@ -174,7 +204,7 @@ const result = await tryPromise({
 Convert an array of Results into a Result of an array:
 
 ```typescript
-import { ok, err, all } from "nothrow";
+import { ok, err, all } from "nothrow-ts";
 
 const results = [ok(1), ok(2), ok(3)];
 const combined = all(results);
@@ -189,7 +219,7 @@ all(withError).isErr(); // true
 Split an array of Results into successes and failures:
 
 ```typescript
-import { ok, err, partition } from "nothrow";
+import { ok, err, partition } from "nothrow-ts";
 
 const results = [ok(1), err("e1"), ok(2), err("e2")];
 const { ok: successes, err: failures } = partition(results);
@@ -205,7 +235,7 @@ Option represents an optional value: Some or None.
 #### Construction
 
 ```typescript
-import { some, none, fromNullable } from "nothrow";
+import { some, none, fromNullable } from "nothrow-ts";
 
 const value = some(42);
 const empty = none<number>();
@@ -257,7 +287,7 @@ const output = option.match({
 ### User Registration Flow
 
 ```typescript
-import { ok, err, gen, Result } from "nothrow";
+import { ok, err, gen, Result } from "nothrow-ts";
 
 interface User {
   email: string;
@@ -320,7 +350,7 @@ user.match({
 ### API Request with Error Handling
 
 ```typescript
-import { tryPromise, Result } from "nothrow";
+import { tryPromise, Result } from "nothrow-ts";
 
 interface ApiError {
   type: "NETWORK" | "HTTP" | "PARSE";
@@ -364,7 +394,7 @@ async function fetchUser(id: string): Promise<Result<User, ApiError>> {
 ### Database Transaction
 
 ```typescript
-import { gen, ok, err, Result } from "nothrow";
+import { gen, ok, err, Result } from "nothrow-ts";
 
 interface DBError {
   type: "NOT_FOUND" | "CONSTRAINT_VIOLATION" | "CONNECTION_ERROR";
@@ -398,7 +428,7 @@ const transferMoney = gen(function* (
 ### Form Validation Pipeline
 
 ```typescript
-import { ok, err, gen, all } from "nothrow";
+import { ok, err, gen, all } from "nothrow-ts";
 
 interface FormData {
   username: string;
@@ -505,13 +535,38 @@ function wrapError<T, E>(
 }
 ```
 
+## Roadmap
+
+NoThrow is actively developed with plans to become a comprehensive functional programming toolkit:
+
+### v0.2.0 - Enhanced Error Handling
+
+- Custom error types with stack traces
+- Error context chaining and wrapping
+- Structured logging integration
+- Performance optimizations for generator chains
+
+### v0.3.0 - Advanced Combinators
+
+- `traverse` and `sequence` for collections
+- `race` and `timeout` for async operations
+- `retry` with configurable strategies
+- `parallel` execution with error aggregation
+
+### v1.0.0 - Production Ready
+
+- Comprehensive benchmarks and performance analysis
+- Advanced TypeScript utilities and type helpers
+- Plugin system for custom error handling strategies
+- Complete documentation with interactive examples
+
 ## License
 
 MIT
 
 ## Contributing
 
-Contributions are welcome. Please ensure all tests pass and add tests for new features.
+Contributions are welcome! Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for development setup, commit conventions, and our automated CI/CD process.
 
 ```bash
 npm install
